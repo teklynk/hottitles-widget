@@ -20,18 +20,17 @@ function getHottitlesListTitle($xmlurl) {
     global $xmlrssname;
 
     $ch = curl_init();
-    $timeout = 20;
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
-    curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+    $timeout = 10;
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
     curl_setopt($ch, CURLOPT_URL, $xmlurl);    // get the url contents
     $xmldata = curl_exec($ch); // execute curl request
     $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
     //catch and print error message
     if ($http_status != 200 || curl_errno($ch) > 0) {
-        echo "HTTP status: ".$http_status.". Error loading URL. " .curl_error($ch);
+        echo "HTTP status: ".$http_status.". Error loading URL. " .curl_error($ch) . PHP_EOL;
+        echo "Could not get title from RSS feed." . PHP_EOL;
         curl_close($ch);
         die();
     }
@@ -49,18 +48,17 @@ function getHottitlesCarousel($xmlurl, $jacketSize, $dummyJackets, $maxcnt) {
     //example: getHottitlesCarousel("http://beacon.tlcdelivers.com:8080/list/dynamic/1921419/rss", 'MD', true, 30);
 
     $ch = curl_init();
-    $timeout = 20;
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
-    curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+    $timeout = 10;
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
     curl_setopt($ch, CURLOPT_URL, $xmlurl);    // get the url contents
     $xmldata = curl_exec($ch); // execute curl request
     $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
     //catch and print error message
     if ($http_status != 200 || curl_errno($ch) > 0) {
-        echo "HTTP status: ".$http_status.". Error loading URL. " .curl_error($ch);
+        echo "HTTP status: ".$http_status.". Error loading URL. " .curl_error($ch) . PHP_EOL;
+        echo "Could not read " . $xmlurl . PHP_EOL;
         curl_close($ch);
         die();
     }
@@ -145,13 +143,56 @@ function getHottitlesCarousel($xmlurl, $jacketSize, $dummyJackets, $maxcnt) {
     echo "</div>";
 }
 
-if (!empty($_GET['urls'])) {
+//Check if customerid is set up on the content server
+if (!empty($_GET['customerid'])) {
+
+    $custId = trim($_GET['customerid']);
+    $checkUrl = 'https://ls2content.tlcdelivers.com/tlccontent?customerid='.$custId.'&appid=ls2pac&requesttype=BOOKJACKET-MD&isbn=9780470167779';
+
+    $ch = curl_init($checkUrl);
+    curl_setopt($ch,  CURLOPT_RETURNTRANSFER, TRUE);
+    $response = curl_exec($ch);
+    //Check for 404 (file not found) OR 403 (access denied)
+    $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+    if ($http_status != 200 || curl_errno($ch) > 0) {
+        echo "HTTP status: " . $http_status . ". Error loading URL. " . curl_error($ch) . PHP_EOL;
+        echo "Not a valid customer id " . $custId . PHP_EOL;
+        curl_close($ch);
+        die();
+    }
+
+    curl_close($ch);
+
+} else {
+
+    die('URL not found or parameters are not correct.');
+}
+
+if (!empty($_GET['urls'] && $_GET['customerid'])) {
 
     $hottitlesUrl = $_GET['urls'];
     $hottitlesUrlArray = explode(',', $_GET['urls']);
-    $jacketSize = strtoupper($_GET['jacketsize']);
-    $dummyJackets = $_GET['showmissingjackets'];
-    $maxCount = $_GET['maxcount'];
+    $custId = trim($_GET['customerid']);
+
+    if (!empty($_GET['jacketsize'])) {
+        $jacketSize = strtoupper($_GET['jacketsize']);
+    } else {
+        $jacketSize = 'MD';
+    }
+
+    if (!empty($_GET['showmissingjackets'])) {
+        $dummyJackets = $_GET['showmissingjackets'];
+    } else {
+        $dummyJackets = 'true';
+    }
+
+    if (!empty($_GET['maxcount'])) {
+        $maxCount = $_GET['maxcount'];
+    } else {
+        $maxCount = 50;
+    }
+
     $hottitlesCount = 0;
 
     echo "<div class='container-fluid'>";
@@ -173,7 +214,7 @@ if (!empty($_GET['urls'])) {
                 $hotActive = '';
             }
 
-            echo "<li class='hot-tab $hotActive'><a target='_self' href='getlist.php?urls=".$hottitlesUrl."&jacketsize=".$jacketSize."&maxcount=".$maxCount."&showmissingjackets=".$dummyJackets."&listnum=".$hottitlesCount."'>".$xmlrssname."</a></li>";
+            echo "<li class='hot-tab $hotActive'><a target='_self' href='getlist.php?urls=".$hottitlesUrl."&customerid=".$custId."&jacketsize=".$jacketSize."&maxcount=".$maxCount."&showmissingjackets=".$dummyJackets."&listnum=".$hottitlesCount."'>".$xmlrssname."</a></li>";
         }
 
     echo "</ul>";
@@ -201,7 +242,7 @@ if (!empty($_GET['urls'])) {
 
 } else {
 
-    die('URL not found or parameters are not correct');
+    die('URL not found or parameters are not correct.');
 
 }
 ?>

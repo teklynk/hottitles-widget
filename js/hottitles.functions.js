@@ -1,16 +1,17 @@
 //Hot titles container and spinner loader
 $(document).ready(function(){
     $('#hottitlesTabs li.hot-tab a').click(function(){
+        $('#hottitlesTabs li.hot-tab a').addClass('disable-anchor');
         $('#hottitlesTabs li.hot-tab').removeClass('active');
         $('#hottitlesCarousel').addClass('loader');
         $('#hottitlesCarousel .carousel-inner').addClass('hidden');
         $('#hottitlesCarousel .carousel-control').addClass('hidden');
     });
 
+    $('#hottitlesTabs li.hot-tab a').removeClass('disable-anchor');
     $('#hottitlesCarousel').removeClass('loader');
     $('#hottitlesCarousel .carousel-inner').removeClass('hidden');
     $('#hottitlesCarousel .carousel-control').removeClass('hidden');
-
 
     //Hot titles carousel
     $('.owl-carousel').owlCarousel({
