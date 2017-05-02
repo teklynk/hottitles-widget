@@ -2,15 +2,21 @@
   <library name="Generated files" type="javaScript">
     <properties>
       <sourceFilesUrls>
-        <item url="file://$PROJECT_DIR$/node_modules/yui-compressor/lib/index.min.js" />
         <item url="file://$PROJECT_DIR$/js/hottitles.functions.min.js" />
+        <item url="file://$PROJECT_DIR$/node_modules/yui-compressor/lib/index.min.js" />
         <item url="file://$PROJECT_DIR$/node_modules/yui-compressor/test.min.js" />
+        <item url="file://$PROJECT_DIR$/js/hottitles.min.js" />
+        <item url="file://$PROJECT_DIR$/js/hottitles.min.min.js" />
+        <item url="file://$PROJECT_DIR$/js/main.min.js" />
       </sourceFilesUrls>
     </properties>
     <CLASSES>
-      <root url="file://$PROJECT_DIR$/node_modules/yui-compressor/lib/index.min.js" />
       <root url="file://$PROJECT_DIR$/js/hottitles.functions.min.js" />
+      <root url="file://$PROJECT_DIR$/node_modules/yui-compressor/lib/index.min.js" />
       <root url="file://$PROJECT_DIR$/node_modules/yui-compressor/test.min.js" />
+      <root url="file://$PROJECT_DIR$/js/hottitles.min.js" />
+      <root url="file://$PROJECT_DIR$/js/hottitles.min.min.js" />
+      <root url="file://$PROJECT_DIR$/js/main.min.js" />
     </CLASSES>
     <SOURCES />
   </library>

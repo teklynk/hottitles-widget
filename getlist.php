@@ -2,16 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="robots" content="index,follow">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=2.0,user-scalable=yes">
     <title>TLC - Hot Titles Carousel</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap-theme.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.2.1/assets/owl.carousel.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.2.1/assets/owl.theme.default.min.css" />
-    <link rel="stylesheet" href="css/hottitles.styles.min.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.2.1/owl.carousel.min.js"></script>
+    <!-- Core CSS Libraries -->
+    <link rel="stylesheet" type="text/css" href="css/hottitles.min.css" />
+    <link rel="stylesheet" type="text/css" href="css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="css/hottitles.styles.min.css" />
+    <!-- Core JS Libraries -->
+    <script src="js/hottitles.min.js"></script>
     <script src="js/hottitles.functions.min.js"></script>
 </head>
 <body>
@@ -40,12 +40,16 @@ function getHottitlesListTitle($xmlurl) {
     $xmlfeed = simplexml_load_string($xmldata);
 
     //Gets the RSS Feed title
-    $xmlrssname = $xmlfeed->channel->title;
-    $xmlrssname = trim(str_replace('LS2 PAC:', '', $xmlrssname));
+    if (strstr($xmlurl, '/econtent/')) {
+        $xmlrssname = "NY Times Best Sellers";
+    } else {
+        $xmlrssname = $xmlfeed->channel->title;
+        $xmlrssname = trim(str_replace('LS2 PAC:', '', $xmlrssname));
+    }
 }
 
-function getHottitlesCarousel($xmlurl, $jacketSize, $dummyJackets, $maxcnt) {
-    //example: getHottitlesCarousel("http://beacon.tlcdelivers.com:8080/list/dynamic/1921419/rss", 'MD', true, 30);
+function getHottitlesCarousel($xmlurl, $jacketSize, $dummyJackets, $maxcnt, $custId, $pacUrl) {
+    //example: getHottitlesCarousel('http://beacon.tlcdelivers.com:8080/list/dynamic/1921419/rss', 'MD', 'true', 30, 999999, 'https://mylibrary.com:8080');
 
     $ch = curl_init();
     $timeout = 10;
@@ -74,9 +78,59 @@ function getHottitlesCarousel($xmlurl, $jacketSize, $dummyJackets, $maxcnt) {
     $loadBalancer = $loadBalancerArr[array_rand($loadBalancerArr)];
 
     echo "<div class='owl-carousel owl-theme'>";
-        if (strstr($xmlurl, '/list/')) {
-            //LS2PAC Saved Search XML Lists
+        if (strstr($xmlurl, '/econtent/')) {
+            //Content server XML Lists - NYTimes
+            //http://content.tlcdelivers.com/econtent/xml/NYTimes.xml
 
+            //Gets the RSS Feed title
+            $xmlrssname = "NY Times Best Sellers";
+
+            $pacUrl = trim($_GET['pacurl']);
+
+            $jacketSize = strtoupper($jacketSize);
+
+            foreach ($xmlfeed->Book as $xmlitem) {
+
+                $itemcount++;
+
+                //get title node for each book
+                $xmltitle = (string)$xmlitem->Title;
+
+                //get ISBN node for each book
+                $xmlisbn = (string)$xmlitem->ISBN;
+
+                //https://ls2content2.tlcdelivers.com/tlccontent?customerid=960748&appid=ls2pac&requesttype=BOOKJACKET-MD&isbn=9781597561075
+                $xmlimage = "https://ls2content$loadBalancer.tlcdelivers.com/tlccontent?customerid=$custId&appid=ls2pac&requesttype=BOOKJACKET-$jacketSize&isbn=$xmlisbn";
+
+                //http://173.163.174.146:8080/?config=ysm#section=search&term=The Black Book
+                $xmllink = "$pacUrl/?config=ysm#section=search&term=$xmltitle";
+
+                //Gets the image dimensions from the xmltheimage url as an array.
+                $xmlimagesize = getimagesize($xmlimage);
+                $xmlimagewidth = $xmlimagesize[0];
+                $xmlimageheight = $xmlimagesize[1];
+
+                echo "<div class='item'>";
+
+                //Check if has book jacket based on the image size (1x1)
+                if ($xmlimageheight > '1' && $xmlimagewidth > '1') {
+                    echo "<a href='" . htmlspecialchars($xmllink, ENT_QUOTES) . "' title='" . htmlspecialchars($xmltitle, ENT_QUOTES) . "' target='_blank' data-resource-isbn='" . $xmlisbn . "' data-item-count='" . $itemcount . "'><img src='" . htmlspecialchars($xmlimage, ENT_QUOTES) . "' class='img-responsive center-block $jacketSize'></a>";
+                } else {
+                    if ($dummyJackets == 'true') {
+                        //TLC dummy book jacket img
+                        echo "<a href='" . htmlspecialchars($xmllink, ENT_QUOTES) . "' title='" . htmlspecialchars($xmltitle, ENT_QUOTES) . "' target='_blank' data-resource-isbn='" . $xmlisbn . "' data-item-count='" . $itemcount . "'><span class='dummy-title'>" . htmlspecialchars($xmltitle, ENT_QUOTES) . "</span><img class='dummy-jacket $jacketSize img-responsive center-block' src='../core/images/gray-bookjacket-md.png'></a>";
+                    }
+                }
+
+                echo "</div>";
+
+                //stop parsing xml once it reaches the max count
+                if ($itemcount == $maxcnt) {
+                    break;
+                }
+            }
+        } elseif (strstr($xmlurl, '/list/')) {
+            //LS2PAC Saved Search XML Lists
             foreach ($xmlfeed->channel->item as $xmlitem) {
 
                 $itemcount++;
@@ -176,21 +230,24 @@ if (!empty($_GET['urls'] && $_GET['customerid'])) {
     $custId = trim($_GET['customerid']);
 
     if (!empty($_GET['jacketsize'])) {
-        $jacketSize = strtoupper($_GET['jacketsize']);
+        $jacketSize = strtoupper(trim($_GET['jacketsize']));
     } else {
         $jacketSize = 'MD';
     }
 
     if (!empty($_GET['showmissingjackets'])) {
-        $dummyJackets = $_GET['showmissingjackets'];
+        $dummyJackets = trim($_GET['showmissingjackets']);
     } else {
         $dummyJackets = 'true';
     }
 
     if (!empty($_GET['maxcount'])) {
-        $maxCount = $_GET['maxcount'];
+        $maxCount = trim($_GET['maxcount']);
     } else {
         $maxCount = 50;
+    }
+    if (!empty($_GET['pacurl'])) {
+        $pacUrl = trim($_GET['pacurl']);
     }
 
     $hottitlesCount = 0;
@@ -214,7 +271,7 @@ if (!empty($_GET['urls'] && $_GET['customerid'])) {
                 $hotActive = '';
             }
 
-            echo "<li class='hot-tab $hotActive'><a target='_self' href='getlist.php?urls=".$hottitlesUrl."&customerid=".$custId."&jacketsize=".$jacketSize."&maxcount=".$maxCount."&showmissingjackets=".$dummyJackets."&listnum=".$hottitlesCount."'>".$xmlrssname."</a></li>";
+            echo "<li class='hot-tab $hotActive'><a target='_self' href='getlist.php?urls=".$hottitlesUrl."&customerid=".$custId."&pacurl=".$pacUrl."&jacketsize=".$jacketSize."&maxcount=".$maxCount."&showmissingjackets=".$dummyJackets."&listnum=".$hottitlesCount."'>".$xmlrssname."</a></li>";
         }
 
     echo "</ul>";
@@ -231,8 +288,8 @@ if (!empty($_GET['urls'] && $_GET['customerid'])) {
             $hottitlesUrlArrayCnt = $_GET['listnum'] - 1;
         }
 
-        //example: getHottitlesCarousel("http://beacon.tlcdelivers.com:8080/list/dynamic/1921419/rss", 'MD', 30);
-        getHottitlesCarousel($hottitlesUrlArray[$hottitlesUrlArrayCnt], $jacketSize, $dummyJackets, $maxCount);
+        //example: getHottitlesCarousel('http://beacon.tlcdelivers.com:8080/list/dynamic/1921419/rss[0]', 'MD', 'true', 30, 999999, 'https://mylibrary.com:8080');
+        getHottitlesCarousel($hottitlesUrlArray[$hottitlesUrlArrayCnt], $jacketSize, $dummyJackets, $maxCount, $custId, $pacUrl);
 
     echo "</div>";
     echo "</div>";
