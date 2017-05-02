@@ -271,7 +271,7 @@ if (!empty($_GET['urls'] && $_GET['customerid'])) {
                 $hotActive = '';
             }
 
-            echo "<li class='hot-tab $hotActive'><a target='_self' href='getlist.php?urls=".$hottitlesUrl."&customerid=".$custId."&pacurl=".$pacUrl."&jacketsize=".$jacketSize."&maxcount=".$maxCount."&showmissingjackets=".$dummyJackets."&listnum=".$hottitlesCount."'>".$xmlrssname."</a></li>";
+            echo "<li class='hot-tab $hotActive'><a target='_self' href='?urls=".$hottitlesUrl."&customerid=".$custId."&pacurl=".$pacUrl."&jacketsize=".$jacketSize."&maxcount=".$maxCount."&showmissingjackets=".$dummyJackets."&listnum=".$hottitlesCount."'>".$xmlrssname."</a></li>";
         }
 
     echo "</ul>";
