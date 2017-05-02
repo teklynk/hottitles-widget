@@ -1,3 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TLC - Hot Titles Carousel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap-theme.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.2.1/assets/owl.carousel.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.2.1/assets/owl.theme.default.min.css" />
+    <link rel="stylesheet" href="css/hottitles.styles.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.2.1/owl.carousel.min.js"></script>
+    <script src="js/hottitles.functions.min.js"></script>
+</head>
+<body>
 <?php
 function getHottitlesListTitle($xmlurl) {
     global $xmlrssname;
@@ -6,6 +23,7 @@ function getHottitlesListTitle($xmlurl) {
     $timeout = 20;
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
     curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($ch, CURLOPT_URL, $xmlurl);    // get the url contents
     $xmldata = curl_exec($ch); // execute curl request
@@ -34,6 +52,7 @@ function getHottitlesCarousel($xmlurl, $jacketSize, $dummyJackets, $maxcnt) {
     $timeout = 20;
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
     curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($ch, CURLOPT_URL, $xmlurl);    // get the url contents
     $xmldata = curl_exec($ch); // execute curl request
@@ -108,7 +127,7 @@ function getHottitlesCarousel($xmlurl, $jacketSize, $dummyJackets, $maxcnt) {
                 if ($xmlimageheight > '1' && $xmlimagewidth > '1') {
                     echo "<a href='" . htmlspecialchars($xmllink, ENT_QUOTES) . "' title='" . htmlspecialchars($xmltitle, ENT_QUOTES) . "' target='_blank' data-resource-id='" . $xmlResourceId . "' data-item-count='" . $itemcount . "'><img src='" . htmlspecialchars($xmlimage, ENT_QUOTES) . "' class='img-responsive center-block $jacketSize'></a>";
                 } else {
-                    if ($dummyJackets == true) {
+                    if ($dummyJackets == 'true') {
                         //TLC dummy book jacket img
                         echo "<a href='" . htmlspecialchars($xmllink, ENT_QUOTES) . "' title='" . htmlspecialchars($xmltitle, ENT_QUOTES) . "' target='_blank' data-resource-id='" . $xmlResourceId . "' data-item-count='" . $itemcount . "'><span class='dummy-title'>" . htmlspecialchars($xmltitle, ENT_QUOTES) . "</span><img class='dummy-jacket $jacketSize img-responsive center-block' src='images/gray-bookjacket-".strtolower($jacketSize).".png'></a>";
                     }
@@ -127,73 +146,64 @@ function getHottitlesCarousel($xmlurl, $jacketSize, $dummyJackets, $maxcnt) {
 }
 
 if (!empty($_GET['urls'])) {
+
     $hottitlesUrl = $_GET['urls'];
     $hottitlesUrlArray = explode(',', $_GET['urls']);
     $jacketSize = strtoupper($_GET['jacketsize']);
-    $blankJackets = $_GET['showblanks'];
+    $dummyJackets = $_GET['showmissingjackets'];
     $maxCount = $_GET['maxcount'];
     $hottitlesCount = 0;
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>TLC - Hot Titles Carousel</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap-theme.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.2.1/assets/owl.carousel.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.2.1/assets/owl.theme.default.min.css" />
-    <link rel="stylesheet" href="css/hottitles.styles.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.2.1/owl.carousel.min.js"></script>
-    <script src="js/hottitles.functions.js"></script>
 
-</head>
-<body>
-<?php
-//Tabs
-echo "<div id='hottitlesTabs'>";
-echo "<ul class='nav nav-pills'>";
+    echo "<div class='container-fluid'>";
+    echo "<div class='well'>";
 
-    foreach ($hottitlesUrlArray as $hotUrl) {
-        $hottitlesCount ++;
+    //Tabs
+    echo "<div id='hottitlesTabs'>";
+    echo "<div class='panel text-center'>";
+    echo "<ul class='nav nav-pills center-tabs'>";
 
-        getHottitlesListTitle($hotUrl); //get the title from the rss feed
+        foreach ($hottitlesUrlArray as $hotUrl) {
+            $hottitlesCount ++;
 
-        if ($hottitlesCount == $_GET['listnum']) {
-            $hotActive = 'active';
-        } else {
-            $hotActive = '';
+            getHottitlesListTitle($hotUrl); //get the title from the rss feed
+
+            if ($hottitlesCount == $_GET['listnum']) {
+                $hotActive = 'active';
+            } else {
+                $hotActive = '';
+            }
+
+            echo "<li class='hot-tab $hotActive'><a target='_self' href='getlist.php?urls=".$hottitlesUrl."&jacketsize=".$jacketSize."&maxcount=".$maxCount."&showmissingjackets=".$dummyJackets."&listnum=".$hottitlesCount."'>".$xmlrssname."</a></li>";
         }
 
-        echo "<li class='hot-tab $hotActive'><a target='_self' href='getlist.php?urls=".$hottitlesUrl."&showblanks=".$blankJackets."&jacketsize=".$jacketSize."&maxcount=".$maxCount."&listnum=".$hottitlesCount."'>".$xmlrssname."</a></li>";
-    }
+    echo "</ul>";
+    echo "</div>";
+    echo "</div>";
 
-echo "</ul>";
-echo "</div>";
+    //Carousel
+    echo "<div class='carousel slide loader-size-$jacketSize' id='hottitlesCarousel'>";
+    echo "<div class='carousel-inner $jacketSize'>";
 
-//Carousel
-echo "<div class='carousel slide' id='hottitlesCarousel'>";
-echo "<div class='carousel-inner $jacketSize'>";
+        if ($_GET['listnum'] == '') {
+            $hottitlesUrlArrayCnt = 0;
+        } else {
+            $hottitlesUrlArrayCnt = $_GET['listnum'] - 1;
+        }
 
-    if ($_GET['listnum'] == '') {
-        $hottitlesUrlArrayCnt = 0;
-    } else {
-        $hottitlesUrlArrayCnt = $_GET['listnum'] - 1;
-    }
+        //example: getHottitlesCarousel("http://beacon.tlcdelivers.com:8080/list/dynamic/1921419/rss", 'MD', 30);
+        getHottitlesCarousel($hottitlesUrlArray[$hottitlesUrlArrayCnt], $jacketSize, $dummyJackets, $maxCount);
 
-    //example: getHottitlesCarousel("http://beacon.tlcdelivers.com:8080/list/dynamic/1921419/rss", 'MD', true, 30);
-    getHottitlesCarousel($hottitlesUrlArray[$hottitlesUrlArrayCnt], $jacketSize, $blankJackets, $maxCount);
-echo "</div>";
-echo "</div>";
-?>
+    echo "</div>";
+    echo "</div>";
 
-</body>
-</html>
+    echo "</div>"; //well
+    echo "</div>"; //container
 
-<?php
 } else {
+
     die('URL not found or parameters are not correct');
+
 }
 ?>
+</body>
+</html>
