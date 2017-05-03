@@ -32,13 +32,13 @@ html, body {
     cursor: default;
 }
 #hottitlesCarousel .carousel-inner.SM, #hottitlesCarousel .carousel-inner.SM .carousel-control {
-    max-height: 100px;
+    height: 100px;
 }
 #hottitlesCarousel .carousel-inner.MD, #hottitlesCarousel .carousel-inner.MD .carousel-control {
-    max-height: 200px;
+    height: 200px;
 }
 #hottitlesCarousel .carousel-inner.LG, #hottitlesCarousel .carousel-inner.LG .carousel-control {
-    max-height: 400px;
+    height: 400px;
 }
 #hottitlesCarousel .carousel-control {
     background: 0;

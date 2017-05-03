@@ -9,67 +9,110 @@
     <!-- Core CSS Libraries -->
     <link rel="stylesheet" type="text/css" href="css/hottitles.min.css" />
     <link rel="stylesheet" type="text/css" href="css/font-awesome.min.css" />
+    <!-- Custom Hot Titles CSS -->
     <link rel="stylesheet" type="text/css" href="css/hottitles.styles.min.css" />
     <!-- Core JS Libraries -->
-    <script src="js/hottitles.min.js"></script>
-    <script src="js/hottitles.functions.min.js"></script>
+    <script language="JavaScript" type="text/javascript" src="js/hottitles.min.js"></script>
+    <!-- Custom Hot Titles JS -->
+    <script language="JavaScript" type="text/javascript" src="js/hottitles.functions.min.js"></script>
 </head>
 <body>
+<!--
+/***********************************************
+* Example using All parameters:
+* http://localhost/hottitles-widget/?urls=https://content.tlcdelivers.com/econtent/xml/NYTimes.xml,http://mylib.tlcdelivers.com:8080/list/dynamic/133470319/rss&customerid=999&pacurl=http://mylib.tlcdelivers.com:8080&jacketsize=md&showmissingjackets=true&maxcount=30&listnum=1
+
+* Example using Only default values:
+* http://localhost/hottitles-widget/?urls=https://content.tlcdelivers.com/econtent/xml/NYTimes.xml,http://mylib.tlcdelivers.com:8080/list/dynamic/133470319/rss&customerid=999&pacurl=http://mylib.tlcdelivers.com:8080
+***********************************************/
+-->
 <?php
-function getHottitlesListTitle($xmlurl) {
+function getHottitlesListTitle($xmlurl, $custId) {
     global $xmlrssname;
 
-    $ch = curl_init();
-    $timeout = 10;
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
-    curl_setopt($ch, CURLOPT_URL, $xmlurl);    // get the url contents
-    $xmldata = curl_exec($ch); // execute curl request
-    $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    //Check if customerid is set up on the content server
+    if (!empty($custId)) {
+        $checkUrl = 'https://ls2content.tlcdelivers.com/tlccontent?customerid='.$custId.'&appid=ls2pac&requesttype=BOOKJACKET-SM&isbn=123456789';
 
-    //catch and print error message
-    if ($http_status != 200 || curl_errno($ch) > 0) {
-        echo "HTTP status: ".$http_status.". Error loading URL. " .curl_error($ch) . PHP_EOL;
-        echo "Could not get title from RSS feed." . PHP_EOL;
+        $ch = curl_init($checkUrl);
+        curl_setopt($ch,  CURLOPT_RETURNTRANSFER, TRUE);
+        $response = curl_exec($ch);
+        //Check for 404 (file not found) OR 403 (access denied)
+        $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        if ($http_status != 200 || curl_errno($ch) > 0) {
+            echo "HTTP status: " . $http_status . ". Error loading URL. " . curl_errno($ch) . "." . PHP_EOL;
+            echo "Not a valid Customer ID " . $custId . "." . PHP_EOL;
+            curl_close($ch);
+            die();
+        }
+
         curl_close($ch);
-        die();
+
+    } else {
+
+        die('URL not found or parameters are not correct.');
     }
 
-    curl_close($ch);
+    if (!empty($xmlurl)) {
+        $ch = curl_init();
+        $timeout = 10;
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
+        curl_setopt($ch, CURLOPT_URL, $xmlurl);    // get the url contents
+        $xmldata = curl_exec($ch); // execute curl request
+        $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-    $xmlfeed = simplexml_load_string($xmldata);
+        //catch and print error message
+        if ($http_status != 200 || curl_errno($ch) > 0) {
+            echo "HTTP status: " . $http_status . ". Error loading URL. " . curl_errno($ch) . "." . PHP_EOL;
+            echo "Could not get title from RSS feed." . PHP_EOL;
 
-    //Gets the RSS Feed title
-    if (strstr($xmlurl, '/econtent/')) {
-        $xmlrssname = "NY Times Best Sellers";
-    } else {
-        $xmlrssname = $xmlfeed->channel->title;
-        $xmlrssname = trim(str_replace('LS2 PAC:', '', $xmlrssname));
+            curl_close($ch);
+            die();
+        }
+
+        curl_close($ch);
+
+        $xmlfeed = simplexml_load_string($xmldata);
+
+        //Gets the RSS Feed title
+        if (strstr($xmlurl, '/econtent/')) {
+            $xmlrssname = "NY Times Best Sellers";
+        } else {
+            $xmlrssname = $xmlfeed->channel->title;
+            $xmlrssname = trim(str_replace('LS2 PAC:', '', $xmlrssname));
+        }
     }
 }
 
 function getHottitlesCarousel($xmlurl, $jacketSize, $dummyJackets, $maxcnt, $custId, $pacUrl) {
     //example: getHottitlesCarousel('http://beacon.tlcdelivers.com:8080/list/dynamic/1921419/rss', 'MD', 'true', 30, 999999, 'https://mylibrary.com:8080');
 
-    $ch = curl_init();
-    $timeout = 10;
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
-    curl_setopt($ch, CURLOPT_URL, $xmlurl);    // get the url contents
-    $xmldata = curl_exec($ch); // execute curl request
-    $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    if (!empty($xmlurl)) {
+        $ch = curl_init();
+        $timeout = 10;
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
+        curl_setopt($ch, CURLOPT_URL, $xmlurl);    // get the url contents
+        $xmldata = curl_exec($ch); // execute curl request
+        $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-    //catch and print error message
-    if ($http_status != 200 || curl_errno($ch) > 0) {
-        echo "HTTP status: ".$http_status.". Error loading URL. " .curl_error($ch) . PHP_EOL;
-        echo "Could not read " . $xmlurl . PHP_EOL;
+        //catch and print error message
+        if ($http_status != 200 || curl_errno($ch) > 0) {
+            echo "HTTP status: " . $http_status . ". Error loading URL. " . curl_errno($ch) . PHP_EOL;
+            echo "Could not read " . $xmlurl . "." . PHP_EOL;
+            curl_close($ch);
+            die();
+        }
+
         curl_close($ch);
-        die();
+
+        $xmlfeed = simplexml_load_string($xmldata);
+    } else {
+
+        die('URL not found or parameters are not correct.');
     }
-
-    curl_close($ch);
-
-    $xmlfeed = simplexml_load_string($xmldata);
 
     $itemcount = 0;
 
@@ -77,17 +120,19 @@ function getHottitlesCarousel($xmlurl, $jacketSize, $dummyJackets, $maxcnt, $cus
     $loadBalancerArr = array(NULL, 2, 3, 4);
     $loadBalancer = $loadBalancerArr[array_rand($loadBalancerArr)];
 
+    $pacUrl = trim($pacUrl);
+
+    $jacketSize = strtoupper($jacketSize);
+
+    //Set a maximum maxcnt
+    if ($maxcnt >= 50) {
+        $maxcnt = 50;
+    }
+
     echo "<div class='owl-carousel owl-theme'>";
         if (strstr($xmlurl, '/econtent/')) {
             //Content server XML Lists - NYTimes
             //http://content.tlcdelivers.com/econtent/xml/NYTimes.xml
-
-            //Gets the RSS Feed title
-            $xmlrssname = "NY Times Best Sellers";
-
-            $pacUrl = trim($_GET['pacurl']);
-
-            $jacketSize = strtoupper($jacketSize);
 
             foreach ($xmlfeed->Book as $xmlitem) {
 
@@ -114,11 +159,11 @@ function getHottitlesCarousel($xmlurl, $jacketSize, $dummyJackets, $maxcnt, $cus
 
                 //Check if has book jacket based on the image size (1x1)
                 if ($xmlimageheight > '1' && $xmlimagewidth > '1') {
-                    echo "<a href='" . htmlspecialchars($xmllink, ENT_QUOTES) . "' title='" . htmlspecialchars($xmltitle, ENT_QUOTES) . "' target='_blank' data-resource-isbn='" . $xmlisbn . "' data-item-count='" . $itemcount . "'><img src='" . htmlspecialchars($xmlimage, ENT_QUOTES) . "' class='img-responsive center-block $jacketSize'></a>";
+                    echo "<a href='" . htmlspecialchars($xmllink, ENT_QUOTES) . "' data-toggle='tooltip' data-placement='top' title='" . htmlspecialchars($xmltitle, ENT_QUOTES) . "' target='_blank' data-resource-isbn='" . $xmlisbn . "' data-item-count='" . $itemcount . "'><img src='" . htmlspecialchars($xmlimage, ENT_QUOTES) . "' class='img-responsive center-block $jacketSize'></a>";
                 } else {
                     if ($dummyJackets == 'true') {
                         //TLC dummy book jacket img
-                        echo "<a href='" . htmlspecialchars($xmllink, ENT_QUOTES) . "' title='" . htmlspecialchars($xmltitle, ENT_QUOTES) . "' target='_blank' data-resource-isbn='" . $xmlisbn . "' data-item-count='" . $itemcount . "'><span class='dummy-title'>" . htmlspecialchars($xmltitle, ENT_QUOTES) . "</span><img class='dummy-jacket $jacketSize img-responsive center-block' src='../core/images/gray-bookjacket-md.png'></a>";
+                        echo "<a href='" . htmlspecialchars($xmllink, ENT_QUOTES) . "' data-toggle='tooltip' data-placement='top' title='" . htmlspecialchars($xmltitle, ENT_QUOTES) . "' target='_blank' data-resource-isbn='" . $xmlisbn . "' data-item-count='" . $itemcount . "'><span class='dummy-title'>" . htmlspecialchars($xmltitle, ENT_QUOTES) . "</span><img class='dummy-jacket $jacketSize img-responsive center-block' src='../core/images/gray-bookjacket-".strtolower($jacketSize).".png'></a>";
                     }
                 }
 
@@ -195,59 +240,48 @@ function getHottitlesCarousel($xmlurl, $jacketSize, $dummyJackets, $maxcnt, $cus
             } //end for loop
         }
     echo "</div>";
-}
+} //end of getHottitlesCarousel()
 
-//Check if customerid is set up on the content server
-if (!empty($_GET['customerid'])) {
-
-    $custId = trim($_GET['customerid']);
-    $checkUrl = 'https://ls2content.tlcdelivers.com/tlccontent?customerid='.$custId.'&appid=ls2pac&requesttype=BOOKJACKET-MD&isbn=9780470167779';
-
-    $ch = curl_init($checkUrl);
-    curl_setopt($ch,  CURLOPT_RETURNTRANSFER, TRUE);
-    $response = curl_exec($ch);
-    //Check for 404 (file not found) OR 403 (access denied)
-    $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-    if ($http_status != 200 || curl_errno($ch) > 0) {
-        echo "HTTP status: " . $http_status . ". Error loading URL. " . curl_error($ch) . PHP_EOL;
-        echo "Not a valid customer id " . $custId . PHP_EOL;
-        curl_close($ch);
-        die();
-    }
-
-    curl_close($ch);
-
-} else {
-
-    die('URL not found or parameters are not correct.');
-}
-
+// Hot Titles Carousel
 if (!empty($_GET['urls'] && $_GET['customerid'])) {
 
+    //Get the URL parameters
     $hottitlesUrl = $_GET['urls'];
+    //Convert URLs parameter into an array
     $hottitlesUrlArray = explode(',', $_GET['urls']);
+    //Get the customerID from customerid=xxxxx
     $custId = trim($_GET['customerid']);
 
+    //Set default values if parameter is missing
     if (!empty($_GET['jacketsize'])) {
         $jacketSize = strtoupper(trim($_GET['jacketsize']));
     } else {
-        $jacketSize = 'MD';
+        $jacketSize = 'MD'; //default
     }
 
     if (!empty($_GET['showmissingjackets'])) {
         $dummyJackets = trim($_GET['showmissingjackets']);
     } else {
-        $dummyJackets = 'true';
+        $dummyJackets = 'true'; //default
     }
 
     if (!empty($_GET['maxcount'])) {
         $maxCount = trim($_GET['maxcount']);
     } else {
-        $maxCount = 50;
+        $maxCount = 50; //default
     }
+
     if (!empty($_GET['pacurl'])) {
         $pacUrl = trim($_GET['pacurl']);
+    } else {
+        $pacUrl = 'http://localhost'; //default
+    }
+
+    //Not used inside getHottitlesCarousel function
+    if (!empty($_GET['listnum'])) {
+        $listNum = $_GET['listnum'];
+    } else {
+        $listNum = 1; //default
     }
 
     $hottitlesCount = 0;
@@ -263,9 +297,9 @@ if (!empty($_GET['urls'] && $_GET['customerid'])) {
         foreach ($hottitlesUrlArray as $hotUrl) {
             $hottitlesCount ++;
 
-            getHottitlesListTitle($hotUrl); //get the title from the rss feed
+            getHottitlesListTitle($hotUrl, $custId); //get the title from the rss feed
 
-            if ($hottitlesCount == $_GET['listnum']) {
+            if ($hottitlesCount == $listNum) {
                 $hotActive = 'active';
             } else {
                 $hotActive = '';
@@ -282,13 +316,13 @@ if (!empty($_GET['urls'] && $_GET['customerid'])) {
     echo "<div class='carousel slide loader-size-$jacketSize' id='hottitlesCarousel'>";
     echo "<div class='carousel-inner $jacketSize'>";
 
-        if ($_GET['listnum'] == '') {
+        if ($listNum == '') {
             $hottitlesUrlArrayCnt = 0;
         } else {
-            $hottitlesUrlArrayCnt = $_GET['listnum'] - 1;
+            $hottitlesUrlArrayCnt = $listNum - 1;
         }
 
-        //example: getHottitlesCarousel('http://beacon.tlcdelivers.com:8080/list/dynamic/1921419/rss[0]', 'MD', 'true', 30, 999999, 'https://mylibrary.com:8080');
+        //example: getHottitlesCarousel('http://beacon.tlcdelivers.com:8080/list/dynamic/1921419/rss[0]', 'MD', 'true', 50, 999999, 'https://mylibrary.com:8080');
         getHottitlesCarousel($hottitlesUrlArray[$hottitlesUrlArrayCnt], $jacketSize, $dummyJackets, $maxCount, $custId, $pacUrl);
 
     echo "</div>";
@@ -303,5 +337,20 @@ if (!empty($_GET['urls'] && $_GET['customerid'])) {
 
 }
 ?>
+
+<!--Google Analytics code-->
+<script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', '123123']);
+    _gaq.push(['_setDomainName', 'none']);
+    _gaq.push(['_setAllowLinker', true]);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+</script>
 </body>
 </html>
