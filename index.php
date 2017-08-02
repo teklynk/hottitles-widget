@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="robots" content="index,follow">
-    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=2.0,user-scalable=yes">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1.0,user-scalable=yes">
     <title>TLC - Hot Titles Carousel</title>
     <!-- Core CSS Libraries -->
     <link rel="stylesheet" type="text/css" href="css/hottitles.min.css" />
@@ -56,7 +56,7 @@ function getHottitlesListTitle($xmlurl, $custId) {
 
     if (!empty($xmlurl)) {
         $ch = curl_init();
-        $timeout = 10;
+        $timeout = 20;
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
         curl_setopt($ch, CURLOPT_URL, $xmlurl);    // get the url contents
@@ -91,7 +91,7 @@ function getHottitlesCarousel($xmlurl, $jacketSize, $dummyJackets, $maxcnt, $cus
 
     if (!empty($xmlurl)) {
         $ch = curl_init();
-        $timeout = 10;
+        $timeout = 20;
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
         curl_setopt($ch, CURLOPT_URL, $xmlurl);    // get the url contents
@@ -322,7 +322,7 @@ if (!empty($_GET['urls'] && $_GET['customerid'])) {
             $hottitlesUrlArrayCnt = $listNum - 1;
         }
 
-        //example: getHottitlesCarousel('http://beacon.tlcdelivers.com:8080/list/dynamic/1921419/rss[0]', 'MD', 'true', 50, 999999, 'https://mylibrary.com:8080');
+        //example: getHottitlesCarousel('http://test.tlcdelivers.com:8080/list/dynamic/1921419/rss[0]', 'MD', 'true', 50, 999999, 'https://mylibrary.com:8080');
         getHottitlesCarousel($hottitlesUrlArray[$hottitlesUrlArrayCnt], $jacketSize, $dummyJackets, $maxCount, $custId, $pacUrl);
 
     echo "</div>";
